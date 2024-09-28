@@ -15,10 +15,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"strings"
 	"os"
+	"strings"
 )
-
 
 func main() {
 	var file_name string
@@ -33,29 +32,29 @@ func main() {
 	fmt.Scan(&file_name)
 
 	// Open the file
-    file, err := os.Open(file_name)
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-    defer file.Close()
+	file, err := os.Open(file_name)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer file.Close()
 
-    // Create a buffered reader
-    reader := bufio.NewReader(file)
+	// Create a buffered reader
+	reader := bufio.NewReader(file)
 
-    // Read and print lines
-    for {
+	// Read and print lines
+	for {
 		var temp_struct name
-        line, err := reader.ReadString('\n')
-        if err != nil {
-            break
-        }
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
 		stringSlice := strings.Split(line, " ")
 		temp_struct.fname = stringSlice[0]
 		temp_struct.lname = stringSlice[1]
 
 		slice_name = append(slice_name, temp_struct)
-    }
+	}
 
 	for _, v := range slice_name {
 		fmt.Printf("First name: %s, Last name: %s", v.fname, v.lname)

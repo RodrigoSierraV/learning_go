@@ -4,66 +4,102 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
+	"regexp"
 	"strings"
 )
 
-//Write a Bubble Sort program in Go. The program
-//should prompt the user to type in a sequence of up to 10 integers. The program
-//should print the integers out on one line, in sorted order, from least to
-//greatest. Use your favorite search tool to find a description of how the bubble
-//sort algorithm works.
 func main() {
-	fmt.Println("enter your numbers:")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	line := scanner.Text()
-	nums := readNumbers(line)
-	BubbleSort(nums)
-	fmt.Print(nums)
-}
+	buffReader := bufio.NewReader(os.Stdin)
+	zoo := make([]Animal, 0)
+	zoo = CreateAnimalList()
 
-func readNumbers(numsAsStr string) []int {
-	numsSplitted := strings.Split(numsAsStr, " ")
-	nums := make([]int, 0, len(numsSplitted))
-	for _, s := range numsSplitted {
-		num, _ := strconv.Atoi(s)
-		nums = append(nums, num)
-	}
-	return nums
-}
+	fmt.Print("To request information about an animal, type a request in the following format:\n<animal_species> <request_type>\nAnimal Species is limited to Cow, Bird or Snake\nRequest type is limited to Eat, Move or Speak\n")
+	fmt.Print("To Exit, type X\n\n")
+	keepLooping := true
+	for keepLooping {
+		fmt.Print(">")
+		inputRequest, err := buffReader.ReadString('\r')
+		inputRequest = strings.Trim(inputRequest, "\r\n")
 
-// Swap
-//
-//A recurring operation in the bubble sort algorithm is
-//the Swap operation which swaps the position of two adjacent elements in the slice.
-//
-//You should write a Swap() function which performs this operation.
-//
-//Your Swap() function should take two arguments, a slice of integers and an index value i which
-//indicates a position in the slice.
-//
-//The Swap() function should return nothing, but it should swap
-//the contents of the slice in position i with the contents in position i+1.
-func Swap(stack []int, index int) {
-	if index >= len(stack)-1 {
-		return
-	}
-	if stack[index] > stack[index+1] {
-		stack[index], stack[index+1] = stack[index+1], stack[index]
-	}
-}
-
-// BubbleSort
-//
-//As part of this program, you should write a
-//function called BubbleSort() which
-//takes a slice of integers as an argument and returns nothing. The BubbleSort() function should modify the slice so that the elements are in sorted
-//order.
-func BubbleSort(stack []int) {
-	for i := 0; i < len(stack)-1; i++ {
-		for ii := 0; ii < len(stack)-1; ii++ {
-			Swap(stack, ii)
+		if err != nil {
+			fmt.Print("Something went wrong while reading request, exiting program\n")
+			os.Exit(1)
 		}
+		keepLooping = HandleRequest(inputRequest, &zoo)
 	}
+}
+
+type Animal struct {
+	species    string
+	food       string
+	locomotion string
+	sound      string
+}
+
+func newAnimal(spec string, eat string, move string, speak string) Animal {
+	a := Animal{species: spec, food: eat, locomotion: move, sound: speak}
+	return a
+}
+func (a Animal) Eat() {
+	fmt.Print(a.species, " eats ", a.food, "\n")
+}
+func (a Animal) Move() {
+	fmt.Print(a.species, " moves by ", a.locomotion, "ing\n")
+}
+func (a Animal) Speak() {
+	fmt.Print(a.species, " goes ", a.sound, "\n")
+}
+func (a Animal) getSpecies() string {
+	return a.species
+}
+
+func CreateAnimalList() []Animal {
+	var a Animal
+	list := make([]Animal, 0)
+
+	a = newAnimal("cow", "grass", "walk", "moo")
+	list = append(list, a)
+	a = newAnimal("bird", "worms", "fly", "peep")
+	list = append(list, a)
+	a = newAnimal("snake", "mice", "slither", "hsss")
+	list = append(list, a)
+
+	return list
+}
+
+func HandleRequest(request string, zoo *[]Animal) bool {
+	request = strings.ToLower(request)
+	if request == "x" || request == "" {
+		fmt.Print("Exiting program\n")
+		return false
+	}
+	re := regexp.MustCompile("\\w+\\s\\w+")
+	validRequest := re.MatchString(request)
+	if !validRequest {
+		fmt.Print("Invalid Request, try again\n")
+		return true
+	}
+
+	requestTokens := strings.Split(request, " ")
+	requestSpecies := requestTokens[0]
+	requestType := requestTokens[1]
+	re = regexp.MustCompile("eat|move|speak")
+	if re.MatchString(requestType) {
+		for _, animal := range *zoo {
+			if strings.ToLower(animal.getSpecies()) == requestSpecies {
+				switch requestType {
+				case "eat":
+					animal.Eat()
+				case "move":
+					animal.Move()
+				case "speak":
+					animal.Speak()
+				}
+			}
+		}
+	} else {
+		fmt.Print("Invalid query type, please limit your input to Eat, Move or Speak")
+	}
+
+	return true
 }

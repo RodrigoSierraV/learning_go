@@ -1,0 +1,22 @@
+In 1965. Gordon Moore noticed that the number of transistors (tiny electronic switches) on a
+computer chip was doubling about every two years. More transistors mean faster and more powerful
+computers, so for many years, computers kept getting much faster and more capable at a steady pace.
+
+In recent years, Moore's Law has slowed down, and it's not as true as it used to be. This is because
+we’re running into physical limitations that make it very hard to keep squeezing more and more
+transistors onto a chip. Here’s why:
+
+1. As we pack more transistors onto a chip (transistor density increases), the power consumption goes
+up. With more power, the chip generates more heat. Too much heat can cause the chip to fail or slow
+down, and cooling becomes a major problem.
+
+2. When transistors switch on and off, they use something called dynamic power, which is related to
+how fast they run and how much voltage is applied. Reducing the voltage can help lower power consumption,
+since lower voltage reduces dynamic power. However, voltage scaling can only help so much because
+there are limits.
+
+3. Lowering the voltage isn’t a perfect solution. As you reduce the voltage, leakage power becomes a
+bigger problem. Leakage power is when transistors use energy even when they’re not switching. This
+power loss still happens, even with lower voltage. Also, voltage can only be reduced to a certain point
+because if it gets too low, the chip becomes more sensitive to noise or crosses the threshold voltage
+where transistors don’t work reliably.

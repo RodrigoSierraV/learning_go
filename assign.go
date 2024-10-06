@@ -4,102 +4,132 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 )
 
-func main() {
-	buffReader := bufio.NewReader(os.Stdin)
-	zoo := make([]Animal, 0)
-	zoo = CreateAnimalList()
-
-	fmt.Print("To request information about an animal, type a request in the following format:\n<animal_species> <request_type>\nAnimal Species is limited to Cow, Bird or Snake\nRequest type is limited to Eat, Move or Speak\n")
-	fmt.Print("To Exit, type X\n\n")
-	keepLooping := true
-	for keepLooping {
-		fmt.Print(">")
-		inputRequest, err := buffReader.ReadString('\r')
-		inputRequest = strings.Trim(inputRequest, "\r\n")
-
-		if err != nil {
-			fmt.Print("Something went wrong while reading request, exiting program\n")
-			os.Exit(1)
-		}
-		keepLooping = HandleRequest(inputRequest, &zoo)
-	}
+// interface
+type Animal interface {
+	Eat()
+	Move()
+	Speak()
 }
 
-type Animal struct {
-	species    string
+//
+type Cow struct {
 	food       string
 	locomotion string
-	sound      string
+	noise      string
+}
+type Bird struct {
+	food       string
+	locomotion string
+	noise      string
+}
+type Snake struct {
+	food       string
+	locomotion string
+	noise      string
 }
 
-func newAnimal(spec string, eat string, move string, speak string) Animal {
-	a := Animal{species: spec, food: eat, locomotion: move, sound: speak}
-	return a
-}
-func (a Animal) Eat() {
-	fmt.Print(a.species, " eats ", a.food, "\n")
-}
-func (a Animal) Move() {
-	fmt.Print(a.species, " moves by ", a.locomotion, "ing\n")
-}
-func (a Animal) Speak() {
-	fmt.Print(a.species, " goes ", a.sound, "\n")
-}
-func (a Animal) getSpecies() string {
-	return a.species
-}
+// func / method
+//
+func (c Cow) Eat()     { fmt.Println(c.food) }
+func (c Cow) Move()    { fmt.Println(c.locomotion) }
+func (c Cow) Speak()   { fmt.Println(c.noise) }
+func (b Bird) Eat()    { fmt.Println(b.food) }
+func (b Bird) Move()   { fmt.Println(b.locomotion) }
+func (b Bird) Speak()  { fmt.Println(b.noise) }
+func (s Snake) Eat()   { fmt.Println(s.food) }
+func (s Snake) Move()  { fmt.Println(s.locomotion) }
+func (s Snake) Speak() { fmt.Println(s.noise) }
 
-func CreateAnimalList() []Animal {
-	var a Animal
-	list := make([]Animal, 0)
-
-	a = newAnimal("cow", "grass", "walk", "moo")
-	list = append(list, a)
-	a = newAnimal("bird", "worms", "fly", "peep")
-	list = append(list, a)
-	a = newAnimal("snake", "mice", "slither", "hsss")
-	list = append(list, a)
-
-	return list
-}
-
-func HandleRequest(request string, zoo *[]Animal) bool {
-	request = strings.ToLower(request)
-	if request == "x" || request == "" {
-		fmt.Print("Exiting program\n")
-		return false
+func main() {
+	var command, param1, param2 string
+	var animal, cow, bird, snake Animal
+	var animals map[string]Animal
+	cow = Cow{"grass", "walk", "moo"}
+	bird = Bird{"worms", "fly", "peep"}
+	snake = Snake{"mice", "slither", "hsss"}
+	animals = map[string]Animal{
+		"cow":   cow,
+		"bird":  bird,
+		"snake": snake,
 	}
-	re := regexp.MustCompile("\\w+\\s\\w+")
-	validRequest := re.MatchString(request)
-	if !validRequest {
-		fmt.Print("Invalid Request, try again\n")
-		return true
-	}
-
-	requestTokens := strings.Split(request, " ")
-	requestSpecies := requestTokens[0]
-	requestType := requestTokens[1]
-	re = regexp.MustCompile("eat|move|speak")
-	if re.MatchString(requestType) {
-		for _, animal := range *zoo {
-			if strings.ToLower(animal.getSpecies()) == requestSpecies {
-				switch requestType {
-				case "eat":
-					animal.Eat()
-				case "move":
-					animal.Move()
-				case "speak":
-					animal.Speak()
+	in := bufio.NewScanner(os.Stdin)
+	fmt.Println("Usage: <newanimal|query> <param1> <param2>")
+	fmt.Println("to add an animal")
+	fmt.Println("newanimal animal_name <animal_type>")
+	fmt.Println("Or to query animal information")
+	fmt.Println("query <animal_type> <information>")
+	fmt.Println("with possible value for <animal_type> cow,bird,snake")
+	fmt.Println("with possible value for <information> eat,move,speak")
+	for {
+		command, param1, param2 = "", "", ""
+		fmt.Printf(">")
+		in.Scan()
+		response := strings.ToLower(in.Text())
+		// check if there are 3 words
+		words := strings.Fields(response)
+		if len(words) == 3 {
+			command = (strings.Split(response, " "))[0]
+			param1 = (strings.Split(response, " "))[1]
+			param2 = (strings.Split(response, " "))[2]
+			switch command {
+			case "newanimal":
+				{
+					_, ok := animals[param1]
+					if ok {
+						fmt.Println("animal name " + param1 + " already known")
+					} else {
+						switch param2 {
+						case "cow":
+							{
+								animals[param1] = cow
+								fmt.Println("Created it!")
+							}
+						case "bird":
+							{
+								animals[param1] = bird
+								fmt.Println("Created it!")
+							}
+						case "snake":
+							{
+								animals[param1] = snake
+								fmt.Println("Created it!")
+							}
+						default:
+							fmt.Println("unknow animal type " + param2)
+						}
+					}
+				}
+			case "query":
+				{
+					_, ok := animals[param1]
+					switch ok {
+					case true:
+						{
+							animal = animals[param1]
+						}
+					case false:
+						{
+							fmt.Println("unknow animal " + param1)
+						}
+					}
+					switch param2 {
+					case "eat":
+						animal.Eat()
+					case "move":
+						animal.Move()
+					case "speak":
+						animal.Speak()
+					default:
+						fmt.Println("unknow information " + param2)
+					}
 				}
 			}
-		}
-	} else {
-		fmt.Print("Invalid query type, please limit your input to Eat, Move or Speak")
-	}
+		} else {
+			fmt.Println("invalid request, try again")
 
-	return true
+		}
+	}
 }

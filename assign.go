@@ -1,59 +1,89 @@
 package main
 
-import "fmt"
-import "sync"
+import (
+	"fmt"
+	"sync"
+	"time"
+)
 
-var Wait sync.WaitGroup
-var Counter = 0
+type Chopstick struct {
+	sync.Mutex
+}
 
-func Add(id int, value int) {
-	for i := 0; i < value; i++ {
-		Counter += 1
-		fmt.Printf("id #%d = %d\n", id, Counter)
-		if Counter >= id*2 {
-			break
+type Philosopher struct {
+	host  *Host
+	num   int
+	left  *Chopstick
+	right *Chopstick
+}
+
+func (p *Philosopher) Eat() {
+	if p.num%2 == 0 {
+		for i := 0; i < 3; {
+			if p.host.allowToEat() {
+				p.left.Lock()
+				p.right.Lock()
+				fmt.Println("starting to eat", p.num)
+				time.Sleep(100 * time.Millisecond)
+				fmt.Println("finishing eating", p.num)
+				p.left.Unlock()
+				p.right.Unlock()
+				p.host.finishEating()
+				i++
+			}
+		}
+	} else {
+		for i := 0; i < 3; {
+			if p.host.allowToEat() {
+				p.right.Lock()
+				p.left.Lock()
+				fmt.Println("starting to eat", p.num)
+				time.Sleep(100 * time.Millisecond)
+				fmt.Println("finishing eating", p.num)
+				p.right.Unlock()
+				p.left.Unlock()
+				p.host.finishEating()
+				i++
+			}
 		}
 	}
+	wg.Done()
 }
-func Add2(id int, value int) {
-	for i := 0; i < value; i++ {
-		Counter += 1
-		fmt.Printf("id #%d = %d\n", id, Counter)
-		if Counter >= id*2 {
-			break
-		}
+
+type Host struct {
+	eatingCount int
+	mut         sync.Mutex
+}
+
+func (h *Host) allowToEat() bool {
+	if h.eatingCount < 2 {
+		h.mut.Lock()
+		h.eatingCount++
+		h.mut.Unlock()
+		return true
 	}
-	Wait.Done()
+	return false
 }
+
+func (h *Host) finishEating() {
+	h.mut.Lock()
+	h.eatingCount--
+	h.mut.Unlock()
+}
+
+var wg sync.WaitGroup
 
 func main() {
-	fmt.Println("Normal Call")
-	Counter = 0
-	for i := 1; i <= 10; i++ {
-		Add(i, i)
+	host := Host{eatingCount: 0}
+	chopsticks := make([]Chopstick, 5)
+	philos := make([]*Philosopher, 5)
+	for i := 0; i < 5; i++ {
+		philos[i] = &Philosopher{host: &host, num: i + 1, left: &chopsticks[i], right: &chopsticks[(i+1)%5]}
 	}
-	fmt.Printf("Final counter : %d\n\n", Counter)
 
-	Counter = 0
-	fmt.Println("Concurrency Call")
-	for i := 1; i <= 10; i++ {
-		Wait.Add(1)
-		go Add2(i, i)
+	wg.Add(len(philos))
+	for i := 0; i < 5; i++ {
+		go philos[i].Eat()
 	}
-	Wait.Wait()
-	fmt.Printf("Final counter : %d\n", Counter)
+	wg.Wait()
 }
-
-/**
-Race condition is when multiple threads access the same resource(s) and one or more of the threads modify / change the value of the resource(s)
-
-In this example, the normal call (sequential) :
-- the sequence is known
-- The state of each steps is known (e.g. the value of Counter always increased by 1)
-- the result can be predict and always the same
-
-While the concurrency call :
-- The sequence is unknown
-- the state in each steps is unknown (e.g. the value of the Counter is not always increasing by 1)
-- The result is unknown and unpredictable
-**/

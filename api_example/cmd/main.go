@@ -4,9 +4,9 @@ import (
 	"log"
 	"runtime/trace"
 
-	"github.com/RodrigoSierraV/learnin_go/api_example/cmd/api"
-	"github.com/RodrigoSierraV/learnin_go/api_example/config"
-	"github.com/RodrigoSierraV/learnin_go/api_example/db"
+	"github.com/RodrigoSierraV/learning_go/api_example/cmd/api"
+	"github.com/RodrigoSierraV/learning_go/api_example/config"
+	"github.com/RodrigoSierraV/learning_go/api_example/db"
 	"github.com/go-sql-driver/mysql"
 )
 
